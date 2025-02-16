@@ -52,14 +52,14 @@ func (repo *PGAdminRepository) CreateAdmin(ctx context.Context, admin Admin) err
 
 // GetAdminHandler - HTTP handler for fetching an admin
 func (repo *PGAdminRepository) GetAdminHandler(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req) // ✅ Fixed redeclaration issue
+	vars := mux.Vars(req)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, "Invalid admin ID", http.StatusBadRequest)
 		return
 	}
 
-	admin, err := repo.GetAdminByID(req.Context(), id) // ✅ Fixed incorrect context reference
+	admin, err := repo.GetAdminByID(req.Context(), id)
 	if err != nil {
 		http.Error(w, "Admin not found", http.StatusNotFound)
 		return

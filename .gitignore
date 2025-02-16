@@ -13,3 +13,4 @@ go.sum
 # Ignore editor/IDE files
 .vscode/
 .idea/
+.env
