@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Module</title>
+    <link rel="stylesheet" href="patient-styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Patient Module</h1>
+        <div class="options">
+            <button onclick="showSection('register')">Register / Create Account</button>
+            <button onclick="showSection('appointments')">Book/Reschedule/Cancel Appointments</button>
+            <button onclick="showSection('medical-history')">View Medical History</button>
+            <button onclick="showSection('notifications')">Notifications</button>
+        </div>
+
+        
+        <div id="register" class="section hidden">
+            <h2>Register / Create Account</h2>
+            <form>
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                
+                <label for="phone">Phone:</label>
+                <input type="tel" id="phone" name="phone" required>
+                
+                <button type="submit">Register</button>
+            </form>
+        </div>
+
+        <div id="appointments" class="section hidden">
+            <h2>Appointments</h2>
+            <p>Book, reschedule, or cancel appointments here.</p>
+            <button onclick="bookAppointment()">Book Appointment</button>
+            <button onclick="rescheduleAppointment()">Reschedule Appointment</button>
+            <button onclick="cancelAppointment()">Cancel Appointment</button>
+        </div>
+
+        <div id="medical-history" class="section hidden">
+            <h2>Medical History</h2>
+            <p>View your medical history, prescriptions, and test results here.</p>
+            <button onclick="viewHistory()">View History</button>
+        </div>
+
+        <div id="notifications" class="section hidden">
+            <h2>Notifications</h2>
+            <p>Check your notifications for upcoming appointments or updates.</p>
+            <button onclick="viewNotifications()">View Notifications</button>
+        </div>
+    </div>
+
+    <script src="patient-script.js"></script>
+</body>
+</html>
