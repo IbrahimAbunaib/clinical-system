@@ -11,3 +11,26 @@ for diagnostics you need to:
 5. There are some data already stored in the database for patients check their ID if you want to log in as them the password is 123 
 
 6. passwords can't be shown in the database because we set an encryption to the passwords in the database in the form of a privacy for patients' tests details
+
+User Guide for the Doctor and Patient Modules:
+This guide explains how to use the Doctor and Patient Modules in a simple way. Follow these steps to set up and test your system.
+
+
+
+Using the Patient Module
+1Register as a new patient by clicking "Register / Create Account" and filling in your details.
+2 Log in using the email and password you provided.
+3 Book an appointment with a doctor by selecting the "Book Appointment" button.
+4 View medical history by clicking "Medical History", where you can see past diagnoses and prescriptions.
+5 Receive notifications about upcoming appointments and updates from doctors.
+ Using the Doctor Module
+1 Login with the doctor’s credentials
+2 View the daily schedule by clicking "View Daily Schedule" to check patient appointments.
+3 Conduct online consultations by selecting "Conduct Online Consultations" and adding consultation details.
+4 Request diagnostic tests for patients via "Request Diagnostic Tests".
+5 Write and save prescriptions for patients under "Write & Save Prescriptions".
+
+Navigating from the Main Page
+1 When you open the main page, you can choose between Patient or Doctor Module.
+2 Click on the respective button to go to the module you need.
+3 Inside each module, you will see different options like Appointments, Diagnostics, and Prescriptions.
