@@ -1,0 +1,15 @@
+# Ignore compiled binaries
+*.exe
+*.out
+*.o
+
+# Ignore Go modules and vendor
+/go/
+bin/
+pkg/
+vendor/
+go.sum
+
+# Ignore editor/IDE files
+.vscode/
+.idea/
