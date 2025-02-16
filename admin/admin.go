@@ -5,84 +5,71 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 )
 
-// Admin represents an admin user
+var secretKey = []byte("your-secret-key")
+
 type Admin struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID       int    `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
-// AdminRepository defines required methods for admin database operations
-type AdminRepository interface {
-	GetAdminByID(ctx context.Context, id int) (*Admin, error)
-	CreateAdmin(ctx context.Context, admin Admin) error
+type JWTResponse struct {
+	Token string `json:"token"`
 }
 
-// PGAdminRepository implements AdminRepository using PostgreSQL
 type PGAdminRepository struct {
 	db *pgxpool.Pool
 }
 
-// NewPGAdminRepository creates a new instance of PGAdminRepository
+// LoginHandler handles admin login
+func (repo *PGAdminRepository) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var admin Admin
+	err := json.NewDecoder(r.Body).Decode(&admin)
+	if err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	var dbAdmin Admin
+	var hashedPassword string
+	err = repo.db.QueryRow(context.Background(), "SELECT id, email, password FROM admin WHERE email=$1", admin.Email).
+		Scan(&dbAdmin.ID, &dbAdmin.Email, &hashedPassword)
+	if err != nil {
+		fmt.Println("❌ Admin not found:", admin.Email)
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	// Debugging output
+	fmt.Println("✅ Admin found in DB:", dbAdmin.Email)
+	fmt.Println("🔹 Stored Hash:", hashedPassword)
+	fmt.Println("🔹 Entered Password:", admin.Password)
+
+	// Compare hashed password
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(admin.Password)); err != nil {
+		fmt.Println("❌ Password comparison failed:", err)
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	// Generate JWT token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email": dbAdmin.Email,
+		"admin": true,
+	})
+
+	tokenString, _ := token.SignedString(secretKey)
+
+	json.NewEncoder(w).Encode(JWTResponse{Token: tokenString})
+}
+
+// NewPGAdminRepository initializes a new admin repository
 func NewPGAdminRepository(db *pgxpool.Pool) *PGAdminRepository {
 	return &PGAdminRepository{db: db}
-}
-
-// GetAdminByID fetches an admin by ID
-func (repo *PGAdminRepository) GetAdminByID(ctx context.Context, id int) (*Admin, error) {
-	var admin Admin
-	err := repo.db.QueryRow(ctx, "SELECT id, name, email FROM admin WHERE id=$1", id).Scan(&admin.ID, &admin.Name, &admin.Email)
-	if err != nil {
-		return nil, err
-	}
-	return &admin, nil
-}
-
-// CreateAdmin inserts a new admin into the database
-func (repo *PGAdminRepository) CreateAdmin(ctx context.Context, admin Admin) error {
-	_, err := repo.db.Exec(ctx, "INSERT INTO admin (name, email) VALUES ($1, $2)", admin.Name, admin.Email)
-	return err
-}
-
-// GetAdminHandler - HTTP handler for fetching an admin
-func (repo *PGAdminRepository) GetAdminHandler(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, "Invalid admin ID", http.StatusBadRequest)
-		return
-	}
-
-	admin, err := repo.GetAdminByID(req.Context(), id)
-	if err != nil {
-		http.Error(w, "Admin not found", http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(admin)
-}
-
-// CreateAdminHandler - HTTP handler for adding a new admin
-func (repo *PGAdminRepository) CreateAdminHandler(w http.ResponseWriter, req *http.Request) {
-	var admin Admin
-	err := json.NewDecoder(req.Body).Decode(&admin)
-	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
-
-	err = repo.CreateAdmin(req.Context(), admin)
-	if err != nil {
-		http.Error(w, "Failed to create admin", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintln(w, "Admin created successfully")
 }
