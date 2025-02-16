@@ -28,7 +28,12 @@ Using the Patient Module
 2 View the daily schedule by clicking "View Daily Schedule" to check patient appointments.
 3 Conduct online consultations by selecting "Conduct Online Consultations" and adding consultation details.
 4 Request diagnostic tests for patients via "Request Diagnostic Tests".
-5 Write and save prescriptions for patients under "Write & Save Prescriptions".
+5 Write and save prescriptions for patients under "Write & Save Prescriptions".  
+I'll now create the Appointment Module, including:
+
+Patient Booking Interface: Allows patients to select a doctor and schedule an appointment.
+Doctor’s Appointment Management: Enables doctors to view and manage their appointments.
+MySQL Database Integration: Stores and retrieves appointment details.
 
 Navigating from the Main Page
 1 When you open the main page, you can choose between Patient or Doctor Module.
