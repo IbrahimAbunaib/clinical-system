@@ -39,3 +39,28 @@ Navigating from the Main Page
 1 When you open the main page, you can choose between Patient or Doctor Module.
 2 Click on the respective button to go to the module you need.
 3 Inside each module, you will see different options like Appointments, Diagnostics, and Prescriptions.
+
+
+# 🏥 Clinical System - Admin Module
+
+## 📌 Overview
+This is the **Admin Module** for the Clinical System, built using **Golang**, **PostgreSQL**, and **REST API**. It provides authentication, user management, and admin functionalities.
+
+---
+
+## 🚀 Features
+✅ Admin authentication (Login with JWT)  
+✅ Secure password storage (Bcrypt hashing)  
+✅ PostgreSQL database integration  
+✅ RESTful API endpoints  
+
+---
+
+## 🛠️ Tech Stack
+- **Backend:** Golang
+- **Database:** PostgreSQL
+- **Authentication:** JWT & Bcrypt
+- **Frameworks/Libraries:** Gorilla Mux, Pgx, godotenv
+
+---
+
