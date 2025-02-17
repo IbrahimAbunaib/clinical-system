@@ -7,17 +7,16 @@ import (
 	"net/http"
 	"os"
 
-	"clinicalsystem/admin"
+	"github.com/IbrahimAbunaib/clinical-system/backend/internal/admin"
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
 	// Load environment variables
-	err := godotenv.Load()
+	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Println("No .env file found, using system environment variables")
 	}
@@ -55,6 +54,11 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", HomeHandler).Methods("GET")
 
+	// Serve frontend files
+	router.PathPrefix("/admin/").Handler(
+		http.StripPrefix("/admin/", http.FileServer(http.Dir("../../frontend/admin"))),
+	)
+
 	// Initialize the admin repository
 	adminRepo := admin.NewPGAdminRepository(dbPool)
 
@@ -73,14 +77,4 @@ func main() {
 // HomeHandler - Basic route
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Welcome to the Clinical System API")
-}
-
-// Function to verify a password against a stored hash
-func verifyPassword(plainPassword, hashedPassword string) {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
-	if err != nil {
-		fmt.Println("❌ Password does not match!")
-	} else {
-		fmt.Println("✅ Password matched successfully!")
-	}
 }
