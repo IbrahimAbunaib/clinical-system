@@ -6,22 +6,35 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var secretKey = []byte(os.Getenv("JWT_SECRET")) // From .env
+// Load secret key from environment variable
+var secretKey = []byte(os.Getenv("JWT_SECRET"))
+
+func init() {
+	if len(secretKey) == 0 {
+		log.Fatal("JWT_SECRET is not set in environment variables")
+	}
+}
 
 type Admin struct {
-	ID       int    `json:"id"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	ID        int       `json:"id"`
+	FullName  string    `json:"full_name"`
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
+	Role      string    `json:"role"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type JWTResponse struct {
-	Token string `json:"token"` // Match frontend expectation
+	Token string `json:"token"`
 }
 
 type PGAdminRepository struct {
@@ -39,9 +52,10 @@ func (repo *PGAdminRepository) LoginHandler(w http.ResponseWriter, r *http.Reque
 	var hashedPassword string
 	err := repo.db.QueryRow(
 		context.Background(),
-		"SELECT id, email, password_hash FROM admins WHERE email = $1", // Updated query
+		"SELECT admin_id, full_name, email, password_hash, role, status FROM admins WHERE email = $1",
 		admin.Email,
-	).Scan(&dbAdmin.ID, &dbAdmin.Email, &hashedPassword)
+	).Scan(&dbAdmin.ID, &dbAdmin.FullName, &dbAdmin.Email, &hashedPassword, &dbAdmin.Role, &dbAdmin.Status)
+
 	if err != nil {
 		log.Printf("Admin not found: %s (%v)", admin.Email, err)
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
@@ -54,13 +68,22 @@ func (repo *PGAdminRepository) LoginHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Generate JWT Token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": dbAdmin.Email,
-		"admin": true,
+		"role":  dbAdmin.Role,
+		"exp":   time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
 	})
 
-	tokenString, _ := token.SignedString(secretKey)
-	json.NewEncoder(w).Encode(JWTResponse{Token: tokenString}) // Ensure "token" key
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		log.Printf("Failed to generate token: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(JWTResponse{Token: tokenString})
 }
 
 func NewPGAdminRepository(db *pgxpool.Pool) *PGAdminRepository {

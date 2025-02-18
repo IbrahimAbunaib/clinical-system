@@ -8,18 +8,32 @@ import (
 	"os"
 
 	"github.com/IbrahimAbunaib/clinical-system/backend/internal/admin"
-
+	"github.com/IbrahimAbunaib/clinical-system/backend/internal/db"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
-func main() {
-	// Load environment variables
-	err := godotenv.Load("../.env")
+func init() {
+	// Load .env file
+	err := godotenv.Load()
 	if err != nil {
-		log.Println("No .env file found, using system environment variables")
+		log.Println("⚠️ Warning: No .env file found. Using system environment variables.")
 	}
+}
+
+func main() {
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("❌ JWT_SECRET is not set in environment variables")
+	}
+
+	fmt.Println("✅ JWT_SECRET is set successfully!")
+
+	db.ConnectDB()
+
+	fmt.Println("Server is running...")
 
 	// Debugging: Print env variables
 	fmt.Println("DB_HOST:", os.Getenv("DB_HOST"))
@@ -52,29 +66,34 @@ func main() {
 
 	// Initialize the router
 	router := mux.NewRouter()
-	router.HandleFunc("/", HomeHandler).Methods("GET")
 
-	// Serve frontend files
+	// Serve frontend files (optional)
 	router.PathPrefix("/admin/").Handler(
-		http.StripPrefix("/admin/", http.FileServer(http.Dir("../../frontend/admin"))),
+		http.StripPrefix("/admin/", http.FileServer(http.Dir("./frontend/admin"))),
 	)
 
 	// Initialize the admin repository
 	adminRepo := admin.NewPGAdminRepository(dbPool)
 
 	// Define admin routes
-	router.HandleFunc("/admin/login", adminRepo.LoginHandler).Methods("POST")
+	apiRouter := router.PathPrefix("/api").Subrouter()
+	apiRouter.HandleFunc("/admin/login", adminRepo.LoginHandler).Methods("POST")
+
+	// Debugging: Print all registered routes
+	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		path, err := route.GetPathTemplate()
+		if err == nil {
+			methods, _ := route.GetMethods()
+			fmt.Println("🛤️ Registered Route:", methods, path)
+		}
+		return nil
+	})
 
 	// Start the HTTP server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8081"
 	}
 	fmt.Println("🚀 Server is running on port", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
-}
-
-// HomeHandler - Basic route
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome to the Clinical System API")
 }
