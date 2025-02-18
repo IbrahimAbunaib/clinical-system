@@ -41,6 +41,17 @@ Navigating from the Main Page
 3 Inside each module, you will see different options like Appointments, Diagnostics, and Prescriptions.
 
 
+Using Billing and payment module 
+Its a simple payment module that requires simple requirements
+1- User ID
+2-Name of the patient/customer
+3-the amount that they need to pay
+4-the expiration date of the bill
+5-Notes about the information of what the bill is for
+6-payment options which can be either credit card or cash
+
+
+
 # 🏥 Clinical System - Admin Module
 
 ## 📌 Overview
