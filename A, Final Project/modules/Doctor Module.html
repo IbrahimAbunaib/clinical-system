@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Module</title>
+    <link rel="stylesheet" href="doctor-styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Doctor Module</h1>
+        <div class="options">
+            <button onclick="showSection('schedule')">View Daily Schedule</button>
+            <button onclick="showSection('consultations')">Conduct Online Consultations</button>
+            <button onclick="showSection('diagnostics')">Request Diagnostic Tests</button>
+            <button onclick="showSection('prescriptions')">Write & Save Prescriptions</button>
+        </div>
+
+        
+        <div id="schedule" class="section hidden">
+            <h2>Daily Schedule</h2>
+            <form id="scheduleForm" action="save_data.php" method="POST" onsubmit="saveData(event, 'schedule')">
+                <label for="schedule">Schedule Details:</label>
+                <textarea id="schedule" name="schedule" rows="5" required></textarea>
+                <button type="submit">Save Schedule</button>
+            </form>
+            <div id="savedSchedule" class="saved-data"></div>
+        </div>
+
+        <div id="consultations" class="section hidden">
+            <h2>Online Consultations</h2>
+            <form id="consultationForm" action="save_data.php" method="POST" onsubmit="saveData(event, 'consultation')">
+                <label for="consultation">Consultation Details:</label>
+                <textarea id="consultation" name="consultation" rows="5" required></textarea>
+                <button type="submit">Save Consultation</button>
+            </form>
+            <div id="savedConsultation" class="saved-data"></div>
+        </div>
+
+        <div id="diagnostics" class="section hidden">
+            <h2>Diagnostic Tests</h2>
+            <form id="diagnosticsForm" action="save_data.php" method="POST" onsubmit="saveData(event, 'diagnostics')">
+                <label for="test_request">Test Request:</label>
+                <textarea id="test_request" name="test_request" rows="5" required></textarea>
+                <label for="test_result">Test Result:</label>
+                <textarea id="test_result" name="test_result" rows="5"></textarea>
+                <button type="submit">Save Test Details</button>
+            </form>
+            <div id="savedDiagnostics" class="saved-data"></div>
+        </div>
+
+        <div id="prescriptions" class="section hidden">
+            <h2>Prescriptions</h2>
+            <form id="prescriptionForm" action="save_data.php" method="POST" onsubmit="saveData(event, 'prescription')">
+                <label for="prescription">Prescription Details:</label>
+                <textarea id="prescription" name="prescription" rows="5" required></textarea>
+                <button type="submit">Save Prescription</button>
+            </form>
+            <div id="savedPrescription" class="saved-data"></div>
+        </div>
+    </div>
+
+    <script src="doctor-script.js"></script>
+</body>
+</html>
