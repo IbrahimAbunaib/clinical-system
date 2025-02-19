@@ -9,13 +9,14 @@ import (
 
 	"github.com/IbrahimAbunaib/clinical-system/backend/internal/admin"
 	"github.com/IbrahimAbunaib/clinical-system/backend/internal/db"
+	"github.com/IbrahimAbunaib/clinical-system/backend/internal/middleware"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
+// init() runs before main() to load environment variables
 func init() {
-	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("⚠️ Warning: No .env file found. Using system environment variables.")
@@ -23,61 +24,53 @@ func init() {
 }
 
 func main() {
-
+	// Ensure JWT_SECRET is set
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		log.Fatal("❌ JWT_SECRET is not set in environment variables")
 	}
-
 	fmt.Println("✅ JWT_SECRET is set successfully!")
 
+	// Connect to the database
 	db.ConnectDB()
 
-	fmt.Println("Server is running...")
-
-	// Debugging: Print env variables
-	fmt.Println("DB_HOST:", os.Getenv("DB_HOST"))
-	fmt.Println("DB_PORT:", os.Getenv("DB_PORT"))
-	fmt.Println("DB_USER:", os.Getenv("DB_USER"))
-	fmt.Println("DB_PASSWORD:", os.Getenv("DB_PASSWORD"))
-	fmt.Println("DB_NAME:", os.Getenv("DB_NAME"))
-	fmt.Println("DATABASE_URL:", os.Getenv("DATABASE_URL"))
-
-	// Get the database URL
+	// Load DATABASE_URL from environment
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		log.Fatal("DATABASE_URL is not set in .env file or environment variables")
+		log.Fatal("❌ DATABASE_URL is not set in .env file or environment variables")
 	}
 
 	// Connect to PostgreSQL
 	dbPool, err := pgxpool.New(context.Background(), databaseURL)
 	if err != nil {
-		log.Fatalf("Unable to connect to database: %v", err)
+		log.Fatalf("❌ Unable to connect to database: %v", err)
 	}
 	defer dbPool.Close()
 
-	// Check database connection
+	// Verify database connection
 	var version string
 	err = dbPool.QueryRow(context.Background(), "SELECT version()").Scan(&version)
 	if err != nil {
-		log.Fatalf("Failed to get PostgreSQL version: %v", err)
+		log.Fatalf("❌ Failed to get PostgreSQL version: %v", err)
 	}
 	fmt.Println("✅ Connected to PostgreSQL, version:", version)
 
-	// Initialize the router
+	// Initialize Router
 	router := mux.NewRouter()
 
-	// Serve frontend files (optional)
-	router.PathPrefix("/admin/").Handler(
-		http.StripPrefix("/admin/", http.FileServer(http.Dir("./frontend/admin"))),
-	)
-
-	// Initialize the admin repository
+	// Admin Routes
+	apiRouter := router.PathPrefix("/api/admin").Subrouter()
 	adminRepo := admin.NewPGAdminRepository(dbPool)
 
-	// Define admin routes
-	apiRouter := router.PathPrefix("/api").Subrouter()
-	apiRouter.HandleFunc("/admin/login", adminRepo.LoginHandler).Methods("POST")
+	// Admin Login Route (No Middleware)
+	apiRouter.HandleFunc("/login", adminRepo.LoginHandler).Methods("POST")
+
+	// ✅ Protect admin routes with JWT middleware
+	protectedRoutes := apiRouter.PathPrefix("/protected").Subrouter()
+	protectedRoutes.Use(middleware.JWTMiddleware)
+	protectedRoutes.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "✅ Welcome to the Admin Dashboard!")
+	}).Methods("GET")
 
 	// Debugging: Print all registered routes
 	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
@@ -89,7 +82,7 @@ func main() {
 		return nil
 	})
 
-	// Start the HTTP server
+	// Start HTTP Server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8081"

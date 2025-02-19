@@ -68,11 +68,10 @@ func (repo *PGAdminRepository) LoginHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Generate JWT Token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email": dbAdmin.Email,
-		"role":  dbAdmin.Role,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
+		"email": dbAdmin.Email,                          // Stores admin's email in the token
+		"role":  dbAdmin.Role,                           // Stores admin's role in the token
+		"exp":   time.Now().Add(time.Second * 1).Unix(), // Token expires in 5 sec
 	})
 
 	tokenString, err := token.SignedString(secretKey)
